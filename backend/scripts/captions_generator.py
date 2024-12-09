@@ -44,12 +44,17 @@ def generate_captions(augmented_dir, captions_csv):
                 console.log(f"[blue]{image_path}[/blue] caption generated.")
 
     # Write to CSV
-    os.makedirs(os.path.dirname(captions_csv), exist_ok=True)
-    with open(captions_csv, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+    try:
+        os.makedirs(os.path.dirname(captions_csv), exist_ok=True)
+        with open(captions_csv, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+        console.log(f"[green]Captions CSV saved at {captions_csv}[/green]")
+    except Exception as e:
+        console.log(f"[red]Failed to write captions CSV. Error: {e}[/red]")
+        raise e
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

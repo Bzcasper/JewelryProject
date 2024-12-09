@@ -25,30 +25,39 @@ def generate_texts(listings_csv, generated_text_csv):
     model.eval()
 
     rows = []
-    with open(listings_csv, 'r', newline='', encoding='utf-8') as infile:
-        reader = csv.DictReader(infile)
-        for row in reader:
-            prompt = f"Generate a compelling title and description for a jewelry product. Product ID: {row['product_id']}, Type: {row['item_specifics'].split(':')[1]}, Description: {row['description']}"
-            generated = generate_text(prompt, model, tokenizer)
-            # Split the generated text into title and description
-            parts = generated.split('\n', 1)
-            title = parts[0].strip() if len(parts) > 0 else "No Title"
-            description = parts[1].strip() if len(parts) > 1 else "No Description"
-            rows.append({
-                'product_id': row['product_id'],
-                'generated_title': title,
-                'generated_description': description
-            })
-            console.log(f"[blue]Generated text for {row['product_id']}[/blue]")
+    try:
+        with open(listings_csv, 'r', newline='', encoding='utf-8') as infile:
+            reader = csv.DictReader(infile)
+            for row in reader:
+                prompt = f"Generate a compelling title and description for a jewelry product. Product ID: {row['product_id']}, Type: {row['item_specifics'].split(':')[1]}, Description: {row['description']}"
+                generated = generate_text(prompt, model, tokenizer)
+                # Split the generated text into title and description
+                parts = generated.split('\n', 1)
+                title = parts[0].strip() if len(parts) > 0 else "No Title"
+                description = parts[1].strip() if len(parts) > 1 else "No Description"
+                rows.append({
+                    'product_id': row['product_id'],
+                    'generated_title': title,
+                    'generated_description': description
+                })
+                console.log(f"[blue]Generated text for {row['product_id']}[/blue]")
+    except Exception as e:
+        console.log(f"[red]Failed to read or write CSV files. Error: {e}[/red]")
+        raise e
 
     # Write to CSV
-    os.makedirs(os.path.dirname(generated_text_csv), exist_ok=True)
-    with open(generated_text_csv, 'w', newline='', encoding='utf-8') as outfile:
-        fieldnames = ['product_id', 'generated_title', 'generated_description']
-        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+    try:
+        os.makedirs(os.path.dirname(generated_text_csv), exist_ok=True)
+        with open(generated_text_csv, 'w', newline='', encoding='utf-8') as outfile:
+            fieldnames = ['product_id', 'generated_title', 'generated_description']
+            writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+        console.log(f"[green]GPT-2 text generation CSV saved at {generated_text_csv}[/green]")
+    except Exception as e:
+        console.log(f"[red]Failed to write GPT-2 text generation CSV. Error: {e}[/red]")
+        raise e
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

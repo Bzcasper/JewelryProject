@@ -198,11 +198,20 @@ def upload_to_gcs(local_path, gcs_path):
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
-    if path != "" and os.path.exists(os.path.join(os.getcwd(), 'frontend', 'build', path)):
-        return send_from_directory(os.path.join(os.getcwd(), 'frontend', 'build'), path)
-    else:
-        return send_from_directory(os.path.join(os.getcwd(), 'frontend', 'build'), 'index.html')
+    try:
+        frontend_build = os.path.join(os.getcwd(), 'frontend', 'build')
+        if path != "" and os.path.exists(os.path.join(frontend_build, path)):
+            return send_from_directory(frontend_build, path)
+        else:
+            return send_from_directory(frontend_build, 'index.html')
+    except Exception as e:
+        logger.error(f"Failed to serve frontend: {e}")
+        return jsonify({"message": "Failed to serve frontend."}), 500
 
 if __name__ == '__main__':
-    # Run the server
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    try:
+        # Run the server
+        app.run(host='0.0.0.0', port=5000, debug=False)
+    except Exception as e:
+        logger.error(f"Failed to start Flask app: {e}")
+        Exit-Script -ExitCode 1 -Message "Script terminated due to Flask app startup error."

@@ -63,11 +63,16 @@ def train_resnet50(resnet_dataset_dir, model_save_path):
         }
     }
 
-    model_engine, optimizer, _, scheduler = deepspeed.initialize(
-        model=model,
-        model_parameters=model.parameters(),
-        config=ds_config
-    )
+    try:
+        model_engine, optimizer, _, scheduler = deepspeed.initialize(
+            model=model,
+            model_parameters=model.parameters(),
+            config=ds_config
+        )
+        console.log("[green]DeepSpeed initialized successfully.[/green]")
+    except Exception as e:
+        console.log(f"[red]Failed to initialize DeepSpeed: {e}[/red]")
+        sys.exit(1)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -97,9 +102,13 @@ def train_resnet50(resnet_dataset_dir, model_save_path):
         console.log(f"[bold]Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.4f}, Acc: {epoch_acc:.4f}[/bold]")
 
     # Save model
-    os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
-    model_engine.save_checkpoint(os.path.dirname(model_save_path), os.path.basename(model_save_path))
-    console.log(f"[green]Model saved to {model_save_path}[/green]")
+    try:
+        os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
+        model_engine.save_checkpoint(os.path.dirname(model_save_path), os.path.basename(model_save_path))
+        console.log(f"[green]Model saved to {model_save_path}[/green]")
+    except Exception as e:
+        console.log(f"[red]Failed to save model: {e}[/red]")
+        sys.exit(1)
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

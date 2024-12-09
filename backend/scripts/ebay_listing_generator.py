@@ -40,6 +40,9 @@ def search_ebay(query):
     except ConnectionError as e:
         console.log(f"[red]eBay API ConnectionError: {e.message}[/red]")
         return []
+    except Exception as e:
+        console.log(f"[red]eBay API Error: {e}[/red]")
+        return []
 
 def generate_listing(product_id, title, description, tags, specifics, prices):
     # Calculate median price
@@ -78,17 +81,22 @@ def generate_csv(augmented_dir, csv_path):
 
             # Search eBay for similar items to determine price
             ebay_prices = search_ebay(title)
-            listing = generate_listing(product_folder, title, description, ', '.join(labels), specifics, ebay_prices)
+            listing = generate_listing(product_id, title, description, ', '.join(labels), specifics, ebay_prices)
             rows.append(listing)
             console.log(f"[green]Generated listing for {product_id}[/green]")
 
     # Write to CSV
     os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-    with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+    try:
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+        console.log(f"[green]eBay listing CSV generated at {csv_path}[/green]")
+    except Exception as e:
+        console.log(f"[red]Failed to write eBay listing CSV. Error: {e}[/red]")
+        raise e
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
